@@ -10,22 +10,33 @@
 
 ```mermaid
 graph TD
-    Client[REST Clients / Notebook] -->|HTTP JSON API| MW[Middleware Chain<br/>Logging + Panic Recovery]
-    MW --> API[REST API Layer<br/>internal/api]
-    API -->|VectorDB Interface| Router[Shard Router<br/>internal/shard]
-    Router -->|FNV-1a Hash Routing| Store[Vector Store Coordinator<br/>internal/vectorstore]
+    Client["REST Clients / Notebook"] -->|HTTP JSON API| MW["Middleware Chain<br/>Logging + Panic Recovery"]
+    MW --> API["REST API Layer<br/>internal/api"]
+    API -->|VectorDB Interface| Router["Shard Router<br/>internal/shard"]
+    Router -->|FNV-1a Hash Routing| Store["Vector Store Coordinator<br/>internal/vectorstore"]
   
-    subgraph Per-Shard Internals
-        Store -->|Collection CRUD| CM[Collection Manager<br/>internal/collection]
-        Store -->|Vector + Metadata Persist| SQLite[(SQLite Storage<br/>internal/storage)]
-        Store -->|Graph Nearest-Neighbor| HNSW[HNSW Index<br/>internal/index]
-        Store -->|BM25 Keyword Search| Bleve[Bleve Text Index<br/>internal/textindex]
-        Store -->|Metadata Match| Filter[Filter Engine<br/>internal/filter]
-        SQLite -->|Memory-Mapped Reads| Mmap[MmapVectorStore]
-        SQLite -->|Crash Recovery| WAL[Write-Ahead Log]
-        HNSW -->|Serialize/Restore| Snap[Snapshot Persistence]
-        HNSW -->|Cosine / L2 / DotProduct| Dist[Distance Metrics]
+    subgraph PerShard ["Per-Shard Internals"]
+        CM["Collection Manager<br/>internal/collection"]
+        SQLite[("SQLite Storage<br/>internal/storage")]
+        HNSW["HNSW Index<br/>internal/index"]
+        Bleve["Bleve Text Index<br/>internal/textindex"]
+        Filter["Filter Engine<br/>internal/filter"]
+        Mmap["MmapVectorStore"]
+        WAL["Write-Ahead Log"]
+        Snap["Snapshot Persistence"]
+        Dist["Distance Metrics"]
     end
+
+    Store -->|Collection CRUD| CM
+    Store -->|Vector + Metadata Persist| SQLite
+    Store -->|Graph Nearest-Neighbor| HNSW
+    Store -->|BM25 Keyword Search| Bleve
+    Store -->|Metadata Match| Filter
+
+    SQLite -->|Memory-Mapped Reads| Mmap
+    SQLite -->|Crash Recovery| WAL
+    HNSW -->|Serialize/Restore| Snap
+    HNSW -->|Cosine / L2 / DotProduct| Dist
 ```
 
 ### Core Components
@@ -152,16 +163,31 @@ To build and compile `Helix`, you must have Go installed.
 
 ### 2. Environment Variables Setup
 
-When running Go commands, make sure the architecture environment variables are set correctly for 64-bit compilation:
+#### A. Architecture Selection (For Go Compilation)
+When compiling `Helix`, ensure your shell's architecture flag is configured to build a 64-bit binary:
 
 - **PowerShell**:
-  ```JavaScript
+  ```powershell
   $env:GOARCH="amd64"
   ```
-- **Command Prompt**:
+- **Command Prompt (CMD)**:
   ```cmd
   set GOARCH=amd64
   ```
+
+#### B. API Keys (For RAG Client/Notebook)
+To run the RAG demo client/notebook, configure your Google Gemini API key by creating a `.env` file in the project root directory:
+
+1. Copy `.env.sample` to `.env`:
+   ```bash
+   cp .env.sample .env
+   ```
+2. Open the `.env` file and set your key:
+   ```env
+   GEMINI_API_KEY="AIzaSyYourGeminiAPIKeyHere"
+   ```
+
+The notebook uses `python-dotenv` to automatically load this key, so you do not need to set it in your terminal.
 
 ---
 
@@ -224,13 +250,13 @@ The project features a full RAG (Retrieval-Augmented Generation) pipeline in [he
 Install the Python libraries required to run the Jupyter cells:
 
 ```bash
-pip install langchain-text-splitters google-genai requests
+pip install langchain-text-splitters google-genai requests python-dotenv
 ```
 
 ### 2. Run Requirements
 
 1. **API Keys**: Ensure your environment variables are configured:
-   - `GEMINI_API_KEY`: Required by `google-genai` for both vector embeddings (`gemini-embedding-2`) and grounded text generation (`gemini-2.0-flash`).
+   - `GEMINI_API_KEY`: Required by `google-genai` for both vector embeddings (`gemini-embedding-2`) and grounded text generation (`gemini-3.1-flash-lite`).
 2. **Start Server**: Start Helix on port 8000 before running the notebook.
 
 ### 3. Notebook Features
@@ -240,3 +266,9 @@ pip install langchain-text-splitters google-genai requests
 - **Search Capabilities**: Demonstrates pure vector search, metadata-filtered search (`section` matching), hybrid search (Vector + BM25 keyword search combined via RRF), and text-only BM25 search.
 - **Index Management**: Demonstrates forcing database rebuild index routines, deleting individual vectors, and dropping database collections.
 - **Diagnostics**: Outputs logs detailing query embedding generations, database retrieval hits, and exact LLM prompt context payloads.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE) - see the LICENSE file for details. Free to use, modify, and distribute for any purpose.
