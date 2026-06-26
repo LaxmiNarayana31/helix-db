@@ -1,6 +1,6 @@
 # Helix
 
-`Helix` is a high-performance, from-scratch vector database written in Go. It supports a pure-Go Hierarchical Navigable Small World (HNSW) graph implementation, SQLite for persistent storage, Bleve for metadata text indexing, and a full REST API interface. It can be compiled into a single static binary and optionally run in a distributed horizontal partition/sharding layout.
+Helix is a high-performance, from-scratch vector database written in Go. It supports a pure-Go Hierarchical Navigable Small World (HNSW) graph implementation, SQLite for persistent storage, Bleve for metadata text indexing, and a full REST API interface. It can be compiled into a single static binary and optionally run in a distributed horizontal partition/sharding layout.
 
 ---
 
@@ -14,7 +14,7 @@ graph TD
     MW --> API["REST API Layer<br/>internal/api"]
     API -->|VectorDB Interface| Router["Shard Router<br/>internal/shard"]
     Router -->|FNV-1a Hash Routing| Store["Vector Store Coordinator<br/>internal/vectorstore"]
-  
+
     subgraph PerShard ["Per-Shard Internals"]
         CM["Collection Manager<br/>internal/collection"]
         SQLite[("SQLite Storage<br/>internal/storage")]
@@ -81,13 +81,13 @@ graph TD
 
 ## Performance & Benchmarks
 
-| Metric                          | Result                                                     |
-| ------------------------------- | ---------------------------------------------------------- |
-| **HNSW Recall@10**        | 97–100% on synthetic datasets (128-dim, 1000 vectors)     |
+| Metric                    | Result                                                     |
+| ------------------------- | ---------------------------------------------------------- |
+| **HNSW Recall@10**        | 97–100% on synthetic datasets (128-dim, 1000 vectors)      |
 | **Cosine Search Latency** | Sub-millisecond for 1000 vectors (128-dim)                 |
 | **Insert Throughput**     | ~5,000 vectors/sec (single-threaded)                       |
 | **Sharded Search**        | Linear scaling via concurrent scatter-gather across shards |
-| **Crash Recovery**        | Zero data loss — SQLite WAL + HNSW snapshots              |
+| **Crash Recovery**        | Zero data loss — SQLite WAL + HNSW snapshots               |
 
 ---
 
@@ -164,6 +164,7 @@ To build and compile `Helix`, you must have Go installed.
 ### 2. Environment Variables Setup
 
 #### A. Architecture Selection (For Go Compilation)
+
 When compiling `Helix`, ensure your shell's architecture flag is configured to build a 64-bit binary:
 
 - **PowerShell**:
@@ -176,6 +177,7 @@ When compiling `Helix`, ensure your shell's architecture flag is configured to b
   ```
 
 #### B. API Keys (For RAG Client/Notebook)
+
 To run the RAG demo client/notebook, configure your Google Gemini API key by creating a `.env` file in the project root directory:
 
 1. Copy `.env.sample` to `.env`:
